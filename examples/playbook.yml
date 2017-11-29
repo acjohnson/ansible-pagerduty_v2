@@ -1,0 +1,57 @@
+# file : playbook_test_pagerduty.yml
+
+- hosts: 127.0.0.1
+  tasks:
+    - name: Create new incident
+      pagerduty_v2:
+        api_key: "{{ api_key }}"
+        request_type: incidents
+        email: email@example.com
+        service_id: PL7MVQH
+        incident_status: triggered
+        incident_title: 'testing'
+      register: incident
+
+    - name: Pause
+      pause:
+
+    - name: Update incident status to resolved
+      pagerduty_v2:
+        api_key: "{{ api_key }}"
+        request_type: incidents
+        email: email@example.com
+        incident_id: "{{ incident['id'] }}"
+        incident_status: resolved
+
+    - name: Pause
+      pause:
+
+    - name: Check incident status, should be resolved
+      pagerduty_v2:
+        api_key: "{{ api_key }}"
+        request_type: incidents
+        incident_id: "{{ incident['id'] }}"
+        incident_status: resolved
+
+    - name: Start maintenance window
+      pagerduty_v2:
+        api_key: "{{ api_key }}"
+        request_type: maintenance_windows
+        maintenance_window_action: start
+        maintenance_window_description: 'Ansible test'
+        maintenance_window_start_time: "2017-10-15T14:33:32-05:00"
+        maintenance_window_duration: 3
+        service_id: PL7MVQH
+        email: email@example.com
+      register: maintenance_window
+
+    - name: Pause
+      pause:
+
+    - name: Stop maintenance window
+      pagerduty_v2:
+        api_key: "{{ api_key }}"
+        request_type: maintenance_windows
+        service_id: PL7MVQH
+        maintenance_window_action: stop
+        maintenance_window_id: "{{ maintenance_window['id'] }}"
